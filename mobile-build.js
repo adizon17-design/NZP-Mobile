@@ -6,15 +6,48 @@
   const status = document.querySelector('#status');
   const controls = document.querySelector('#touch-controls');
   const welcome = document.querySelector('#welcome');
-  const heldKeys = new Set();
-  const heldMouseButtons = new Set();
-  const fingers = new Map();
   const audioContexts = new Set();
-  let nextFinger = 100;
-  let lastAimPoint = { x: 0, y: 0 };
 
-  // iOS can suspend WebAudio when the engine creates its audio context after
-  // the Start tap. Track engine contexts and resume them on each real touch.
+  // Present one standard-mapped virtual controller to FTE's normal poller.
+  // Its web build reads navigator.getGamepads() every frame, so touch controls
+  // can use the same input path as a connected controller.
+  const virtualButtons = Array.from({ length: 17 }, () => ({ pressed: false, touched: false, value: 0, lastframe: false }));
+  const virtualPad = {
+    id: 'NZ:P Touch Controller', index: 4, connected: true, timestamp: 0,
+    mapping: 'standard', axes: [0, 0, 0, 0], buttons: virtualButtons,
+    hapticActuators: [], vibrationActuator: null
+  };
+  const nativeGetGamepads = navigator.getGamepads;
+  try {
+    Object.defineProperty(navigator, 'getGamepads', {
+      configurable: true,
+      value() {
+        let pads = [];
+        try { if (nativeGetGamepads) pads = Array.from(nativeGetGamepads.call(navigator) || []); } catch (_) {}
+        while (pads.length <= virtualPad.index) pads.push(null);
+        pads[virtualPad.index] = virtualPad;
+        return pads;
+      }
+    });
+  } catch (_) {
+    status.textContent = 'Virtual controller is unavailable in this browser.';
+  }
+
+  const buttonSources = new Map();
+  function setPadButton(index, down, source) {
+    let sources = buttonSources.get(index);
+    if (!sources) buttonSources.set(index, sources = new Set());
+    if (down) sources.add(source);
+    else sources.delete(source);
+    const pressed = sources.size > 0;
+    const button = virtualButtons[index];
+    button.pressed = button.touched = pressed;
+    button.value = pressed ? 1 : 0;
+    virtualPad.timestamp = performance.now();
+    if (!pressed) buttonSources.delete(index);
+  }
+
+  // Track engine-created WebAudio contexts and unlock them from real taps.
   for (const name of ['AudioContext', 'webkitAudioContext']) {
     const NativeContext = window[name];
     if (!NativeContext || NativeContext.__nzpTracked) continue;
@@ -28,15 +61,10 @@
     Object.defineProperty(TrackedContext, '__nzpTracked', { value: true });
     try { window[name] = TrackedContext; } catch (_) {}
   }
-
   function unlockAudio() {
-    // Create the first context synchronously from a user gesture. This matters
-    // for iOS Safari and installed web apps where engine startup can be async.
     if (!audioContexts.size) {
       const Context = window.AudioContext || window.webkitAudioContext;
-      if (Context) {
-        try { audioContexts.add(new Context()); } catch (_) {}
-      }
+      if (Context) { try { audioContexts.add(new Context()); } catch (_) {} }
     }
     for (const context of audioContexts) {
       if (context.state === 'suspended') context.resume().catch(() => {});
@@ -62,59 +90,7 @@
     postRun: [() => { welcome.hidden = true; controls.hidden = false; }]
   };
 
-  function sendKey(code, down) {
-    if (down ? heldKeys.has(code) : !heldKeys.has(code)) return;
-    down ? heldKeys.add(code) : heldKeys.delete(code);
-    const key = ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyR: 'r', KeyG: 'g', Space: ' ', Enter: 'Enter', Escape: 'Escape', ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight' })[code] || '';
-    const keyCode = ({ KeyW: 87, KeyA: 65, KeyS: 83, KeyD: 68, KeyE: 69, KeyR: 82, KeyG: 71, Space: 32, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39 })[code] || 0;
-    canvas.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', {
-      key, code, keyCode, which: keyCode,
-      bubbles: true, cancelable: true
-    }));
-  }
-  function sendMouseButton(button, down, x = lastAimPoint.x, y = lastAimPoint.y) {
-    if (down ? heldMouseButtons.has(button) : !heldMouseButtons.has(button)) return;
-    if (down) canvas.focus({ preventScroll: true });
-    down ? heldMouseButtons.add(button) : heldMouseButtons.delete(button);
-    const buttonBit = value => value === 2 ? 2 : value === 1 ? 4 : 1;
-    const bits = [...heldMouseButtons].reduce((mask, value) => mask | buttonBit(value), 0);
-    canvas.dispatchEvent(new MouseEvent(down ? 'mousedown' : 'mouseup', {
-      button, buttons: bits, clientX: x, clientY: y,
-      screenX: x, screenY: y, bubbles: true, cancelable: true, view: window
-    }));
-  }
-
-  function touchPoint(id, x, y) {
-    const TouchType = window.Touch;
-    if (!TouchType || !window.TouchEvent) throw new Error('This browser cannot construct the game input events required by this preview.');
-    return new TouchType({ identifier: id, target: canvas, clientX: x, clientY: y, pageX: x + scrollX, pageY: y + scrollY, radiusX: 1, radiusY: 1, rotationAngle: 0, force: 1 });
-  }
-  function sendTouch(type, id, x, y) {
-    const point = touchPoint(id, x, y);
-    const active = [...fingers.values()].map(f => touchPoint(f.id, f.x, f.y));
-    const changed = [point];
-    const touches = type === 'touchend' || type === 'touchcancel' ? active.filter(t => t.identifier !== id) : [...active.filter(t => t.identifier !== id), point];
-    canvas.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches, targetTouches: touches, changedTouches: changed }));
-  }
-  function startFinger(pointerId, x, y) {
-    const id = nextFinger++;
-    fingers.set(pointerId, { id, x, y });
-    sendTouch('touchstart', id, x, y);
-    return id;
-  }
-  function moveFinger(pointerId, x, y) {
-    const f = fingers.get(pointerId);
-    if (!f) return;
-    f.x = x; f.y = y;
-    sendTouch('touchmove', f.id, x, y);
-  }
-  function endFinger(pointerId, x, y) {
-    const f = fingers.get(pointerId);
-    if (!f) return;
-    f.x = x; f.y = y;
-    sendTouch('touchend', f.id, x, y);
-    fingers.delete(pointerId);
-  }
+  document.addEventListener('pointerdown', unlockAudio, { capture: true, passive: true });
 
   const stick = document.querySelector('#stick');
   const stickNub = stick.querySelector('span');
@@ -124,91 +100,119 @@
     const radius = box.width * .34;
     const dx = event.clientX - (box.left + box.width / 2);
     const dy = event.clientY - (box.top + box.height / 2);
-    const length = Math.hypot(dx, dy) || 1;
-    const scale = Math.min(1, radius / length);
-    const nx = dx * scale, ny = dy * scale;
+    const length = Math.hypot(dx, dy);
+    const capped = Math.min(length, radius);
+    const nx = length ? dx / length * capped : 0;
+    const ny = length ? dy / length * capped : 0;
     stickNub.style.left = `calc(50% + ${nx}px)`;
     stickNub.style.top = `calc(50% + ${ny}px)`;
-    const dead = box.width * .17;
-    sendKey('KeyW', ny < -dead); sendKey('KeyS', ny > dead);
-    sendKey('KeyA', nx < -dead); sendKey('KeyD', nx > dead);
-    sendKey('ArrowUp', ny < -dead); sendKey('ArrowDown', ny > dead);
-    sendKey('ArrowLeft', nx < -dead); sendKey('ArrowRight', nx > dead);
+
+    // Radial dead zone and smooth analog axes replace the old competing
+    // WASD+arrow-key events, which made movement and turning fight each other.
+    const magnitude = Math.min(1, length / radius);
+    const deadZone = .12;
+    const strength = magnitude <= deadZone ? 0 : (magnitude - deadZone) / (1 - deadZone);
+    const gain = strength / (magnitude || 1);
+    virtualPad.axes[0] = dx / radius * gain;
+    virtualPad.axes[1] = dy / radius * gain;
+    virtualPad.timestamp = performance.now();
   }
   stick.addEventListener('pointerdown', event => {
-    event.preventDefault(); stickPointer = event.pointerId; stick.setPointerCapture(stickPointer); updateStick(event);
+    event.preventDefault(); unlockAudio();
+    stickPointer = event.pointerId;
+    stick.setPointerCapture(stickPointer);
+    updateStick(event);
   });
   stick.addEventListener('pointermove', event => { if (event.pointerId === stickPointer) updateStick(event); });
   function resetStick(event) {
     if (event.pointerId !== stickPointer) return;
     stickPointer = null;
-    for (const key of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) sendKey(key, false);
-    stickNub.style.left = '50%'; stickNub.style.top = '50%';
+    virtualPad.axes[0] = virtualPad.axes[1] = 0;
+    stickNub.style.left = stickNub.style.top = '50%';
+    virtualPad.timestamp = performance.now();
   }
   stick.addEventListener('pointerup', resetStick);
   stick.addEventListener('pointercancel', resetStick);
 
+  // The look pad moves the virtual right stick only. In FTE a TouchEvent
+  // touchstart is a left mouse press, so forwarding taps there caused firing.
   const look = document.querySelector('#look');
-  const lookPointers = new Set();
-  document.addEventListener('pointerdown', unlockAudio, { capture: true, passive: true });
-  look.addEventListener('pointerdown', event => {
-    event.preventDefault(); look.setPointerCapture(event.pointerId); lookPointers.add(event.pointerId);
-    lastAimPoint = { x: event.clientX, y: event.clientY };
-    try { startFinger(event.pointerId, event.clientX, event.clientY); }
-    catch (error) { status.textContent = error.message; }
-  });
-  look.addEventListener('pointermove', event => {
-    if (!lookPointers.has(event.pointerId)) return;
-    lastAimPoint = { x: event.clientX, y: event.clientY };
-    moveFinger(event.pointerId, event.clientX, event.clientY);
-  });
-  function endLook(event) {
-    if (!lookPointers.delete(event.pointerId)) return;
-    endFinger(event.pointerId, event.clientX, event.clientY);
+  let lookPointer = null;
+  let lastLook = null;
+  let lookResetTimer = 0;
+  function updateLook(event) {
+    if (!lastLook) { lastLook = { x: event.clientX, y: event.clientY }; return; }
+    const dx = event.clientX - lastLook.x;
+    const dy = event.clientY - lastLook.y;
+    lastLook = { x: event.clientX, y: event.clientY };
+    virtualPad.axes[2] = Math.max(-1, Math.min(1, dx / 18));
+    virtualPad.axes[3] = Math.max(-1, Math.min(1, dy / 18));
+    virtualPad.timestamp = performance.now();
+    clearTimeout(lookResetTimer);
+    lookResetTimer = setTimeout(() => { virtualPad.axes[2] = virtualPad.axes[3] = 0; }, 55);
   }
-  look.addEventListener('pointerup', endLook);
-  look.addEventListener('pointercancel', endLook);
+  look.addEventListener('pointerdown', event => {
+    event.preventDefault(); unlockAudio();
+    lookPointer = event.pointerId;
+    look.setPointerCapture(lookPointer);
+    lastLook = { x: event.clientX, y: event.clientY };
+  });
+  look.addEventListener('pointermove', event => { if (event.pointerId === lookPointer) updateLook(event); });
+  function resetLook(event) {
+    if (event.pointerId !== lookPointer) return;
+    lookPointer = null;
+    lastLook = null;
+    clearTimeout(lookResetTimer);
+    virtualPad.axes[2] = virtualPad.axes[3] = 0;
+    virtualPad.timestamp = performance.now();
+  }
+  look.addEventListener('pointerup', resetLook);
+  look.addEventListener('pointercancel', resetLook);
 
   document.querySelectorAll('#buttons button, #menu-controls button').forEach(button => {
+    const index = Number(button.dataset.gamepadButton);
     button.addEventListener('pointerdown', event => {
-      event.preventDefault(); button.setPointerCapture(event.pointerId);
-      unlockAudio();
+      event.preventDefault(); unlockAudio();
+      button.setPointerCapture(event.pointerId);
       if (button.dataset.adsToggle) {
-        const aiming = heldMouseButtons.has(2);
-        sendMouseButton(2, !aiming, event.clientX, event.clientY);
+        const aiming = virtualButtons[index].pressed;
+        setPadButton(index, !aiming, button);
         button.classList.toggle('is-held', !aiming);
         button.setAttribute('aria-pressed', String(!aiming));
         return;
       }
       button.classList.add('is-held');
-      if (button.dataset.fire) sendMouseButton(0, true, event.clientX, event.clientY);
-      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), true, event.clientX, event.clientY);
-      else sendKey(button.dataset.key, true);
+      setPadButton(index, true, button);
     });
     const release = event => {
       if (button.dataset.adsToggle) return;
       button.classList.remove('is-held');
-      if (button.dataset.fire) sendMouseButton(0, false, event.clientX, event.clientY);
-      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), false, event.clientX, event.clientY);
-      else if (button.dataset.key) sendKey(button.dataset.key, false);
+      setPadButton(index, false, button);
     };
     button.addEventListener('pointerup', release);
     button.addEventListener('pointercancel', release);
   });
 
   function releaseAll() {
-    for (const code of [...heldKeys]) sendKey(code, false);
-    for (const button of [...heldMouseButtons]) sendMouseButton(button, false);
-    for (const pointerId of [...fingers.keys()]) endFinger(pointerId, 0, 0);
+    for (const index of buttonSources.keys()) {
+      const button = virtualButtons[index];
+      button.pressed = button.touched = false;
+      button.value = 0;
+    }
+    virtualButtons.forEach(button => { button.pressed = button.touched = false; button.value = 0; });
+    buttonSources.clear();
     document.querySelectorAll('#buttons .is-held').forEach(button => {
       button.classList.remove('is-held');
       if (button.dataset.adsToggle) button.setAttribute('aria-pressed', 'false');
     });
-    if (stickPointer !== null) { stickPointer = null; stickNub.style.left = '50%'; stickNub.style.top = '50%'; }
+    virtualPad.axes.fill(0);
+    stickPointer = lookPointer = null;
+    stickNub.style.left = stickNub.style.top = '50%';
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
   window.addEventListener('blur', releaseAll);
   window.addEventListener('pagehide', releaseAll);
+
   document.querySelector('#fullscreen').addEventListener('click', async () => {
     try { await document.documentElement.requestFullscreen?.(); } catch (_) { status.textContent = 'Fullscreen is unavailable in this browser.'; }
   });

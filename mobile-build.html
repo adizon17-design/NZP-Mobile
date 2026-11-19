@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>NZ:P Mobile Controls Preview</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="mobile-build.css?v=menu-audio-grenade-20261119">
+  <link rel="stylesheet" href="mobile-build.css?v=virtual-pad-20261119">
 </head>
 <body>
   <main id="app">
@@ -20,27 +20,30 @@
       <div id="look" aria-label="Right half: drag to aim"><span>DRAG TO AIM</span></div>
       <nav id="menu-controls" aria-label="Menu navigation">
         <div class="menu-pad" role="group" aria-label="Menu directions">
-          <button type="button" data-key="ArrowUp" class="menu-up" aria-label="Menu up">▲</button>
-          <button type="button" data-key="ArrowLeft" class="menu-left" aria-label="Menu left">◀</button>
+          <button type="button" data-gamepad-button="12" class="menu-up" aria-label="Menu up">▲</button>
+          <button type="button" data-gamepad-button="14" class="menu-left" aria-label="Menu left">◀</button>
           <span>MENU</span>
-          <button type="button" data-key="ArrowRight" class="menu-right" aria-label="Menu right">▶</button>
-          <button type="button" data-key="ArrowDown" class="menu-down" aria-label="Menu down">▼</button>
+          <button type="button" data-gamepad-button="15" class="menu-right" aria-label="Menu right">▶</button>
+          <button type="button" data-gamepad-button="13" class="menu-down" aria-label="Menu down">▼</button>
         </div>
         <div class="menu-actions" role="group" aria-label="Menu actions">
-          <button type="button" data-key="Escape" class="back">PAUSE<br>BACK</button>
-          <button type="button" data-key="Enter" class="select">SELECT</button>
+          <button type="button" data-gamepad-button="9" class="pause">PAUSE</button>
+          <button type="button" data-gamepad-button="8" class="back">BACK</button>
+          <button type="button" data-gamepad-button="0" class="select">SELECT</button>
         </div>
       </nav>
       <div id="buttons">
-        <button type="button" data-key="Space" class="jump">JUMP</button>
-        <button type="button" data-key="KeyE" class="use">USE</button>
-        <button type="button" data-key="KeyR" class="reload">RELOAD</button>
-        <button type="button" data-key="KeyG" class="grenade">GRENADE</button>
-        <button type="button" data-ads-toggle="true" class="ads" aria-pressed="false">ADS</button>
-        <button type="button" data-fire="true" class="fire">FIRE</button>
+        <button type="button" data-gamepad-button="0" class="jump">JUMP</button>
+        <button type="button" data-gamepad-button="1" class="use">USE</button>
+        <button type="button" data-gamepad-button="1" class="use-left">USE</button>
+        <button type="button" data-gamepad-button="2" class="reload">RELOAD</button>
+        <button type="button" data-gamepad-button="3" class="weapon">WEAPON</button>
+        <button type="button" data-gamepad-button="4" class="grenade">GRENADE</button>
+        <button type="button" data-gamepad-button="6" data-ads-toggle="true" class="ads" aria-pressed="false">ADS</button>
+        <button type="button" data-gamepad-button="7" class="fire">FIRE</button>
       </div>
     </section>
   </main>
-  <script src="mobile-build.js?v=menu-audio-grenade-20261119"></script>
+  <script src="mobile-build.js?v=virtual-pad-20261119"></script>
 </body>
 </html>

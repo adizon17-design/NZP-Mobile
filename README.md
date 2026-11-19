@@ -1,6 +1,6 @@
 # NZ:P Mobile — compatibility shell (incomplete)
 
-This is an independently hosted PWA shell plus an experimental same-page launcher at `mobile-build.html`. The launcher requests the official engine and game packages directly from `nzp.gay`; this repository does not include or redistribute upstream binaries or assets. The controls dispatch keyboard, mouse, and touch input events to the same-page game canvas, following the FTE browser input handlers.
+This is an independently hosted PWA shell plus an experimental same-page launcher at `mobile-build.html`. The launcher requests the official engine and game packages directly from `nzp.gay`; this repository does not include or redistribute upstream binaries or assets. Touch controls expose a standard-mapped virtual gamepad through the browser Gamepad API polled by FTE.
 
 ## Upstream inspection
 
@@ -25,18 +25,18 @@ Last inspected: 2026-11-19. No actual iPhone 15 or Safari device was available i
 |---|---|
 | Shell responsive layout, landscape intent, safe-area CSS | Implemented; not device-tested |
 | Official game boot and WASM loading | Confirmed in desktop browser; game reached active play |
-| Movement, menu navigation, and aim drag | Movement and aim confirmed on desktop; dedicated touch D-pad and pause/back inputs added, device check still needed |
-| Fire, reload, and ADS | Fire confirmed in desktop gameplay; ADS now toggles secondary mouse input; weapon-specific ADS still needs confirmation |
+| Movement, menu navigation, and aim drag | Touch controls feed analog axes and D-pad through a standard virtual gamepad; iPhone check still needed |
+| Fire, reload, ADS, grenade, weapon change, jump, and use | Routed through standard gamepad buttons; weapon-specific behavior still needs confirmation |
 | Gamepad button/stick routing and reconnect | FTE browser build polls the browser Gamepad API; physical controller not tested |
 | Audio unlock | SOUND and touch interactions create/resume WebAudio contexts for iOS; iPhone output remains unverified |
 | PWA shell manifest/service worker | Home screen now opens the touch-control game page and caches its shell; reinstall/update behavior not device-tested |
 | Cloudflare Pages configuration | Standard static deployment; no custom MIME overrides needed for shell |
-| Automated acceptance tests | Not added; engine bridge absent, so meaningful gameplay tests cannot pass |
+| Automated acceptance tests | Not added; engine is hosted remotely, so meaningful gameplay checks need the live browser build |
 
 ## Work required to reach acceptance
 
-1. Confirm weapon-specific ADS and grenade behavior on an iPhone.
-2. Test touch movement/look/fire/ADS/menu/pause, focus loss, orientation, audio, and Bluetooth gamepad on iPhone Safari; record device and iOS versions.
+1. Confirm weapon-specific ADS, grenade, and weapon cycling on an iPhone.
+2. Test analog movement/look, fire/ADS/menu/pause, focus loss, orientation, audio, and Bluetooth gamepad on iPhone Safari; record device and iOS versions.
 3. If cross-origin loading is blocked in another browser, build a same-origin distribution only after confirming redistribution terms and required source/notices for GPL components.
 
 ## Hosting status

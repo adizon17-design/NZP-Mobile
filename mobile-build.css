@@ -44,22 +44,24 @@ button {
 #buttons { position: absolute; inset: 0; pointer-events: none; }
 #buttons button { position: absolute; display: grid; place-items: center; min-width: 60px; min-height: 56px; padding: 5px; border-radius: 50%; pointer-events: auto; }
 .fire { right: var(--edge); bottom: max(22px, 4vh); width: clamp(78px, 11vw, 92px); height: clamp(78px, 11vw, 92px); background: #8b1b12e8; font-size: 13px !important; }
-.jump { right: calc(var(--edge) + 94px); bottom: max(28px, 5vh); }
+.jump { left: calc(var(--edge) + 44px); bottom: calc(max(18px, 4vh) + 150px); }
 .use { right: calc(var(--edge) + 94px); bottom: calc(max(28px, 5vh) + 68px); }
+.use-left { left: calc(var(--edge) + 166px); bottom: max(22px, 4vh); }
 .reload { right: calc(var(--edge) + 164px); bottom: calc(max(28px, 5vh) + 68px); }
 .grenade { right: calc(var(--edge) + 164px); bottom: max(28px, 5vh); font-size: 10px !important; }
+.weapon { right: calc(var(--edge) + 164px); bottom: calc(max(28px, 5vh) + 136px); }
 .ads { right: var(--edge); bottom: calc(max(22px, 4vh) + 98px); min-width: 64px !important; min-height: 52px !important; border-radius: 16px !important; background: #394a78ed; }
 #menu-controls { position: absolute; z-index: 2; inset: 0; pointer-events: none; }
-.menu-pad { position: absolute; top: 10px; right: var(--edge); width: 132px; height: 132px; pointer-events: none; }
+.menu-pad { position: absolute; left: var(--edge); bottom: calc(max(18px, 4vh) + 220px); width: 132px; height: 132px; pointer-events: none; }
 .menu-pad button { position: absolute; width: 44px; height: 42px; min-width: 44px; min-height: 42px; padding: 0; border-radius: 12px; pointer-events: auto; background: #171b25e8; }
 .menu-pad span { position: absolute; left: 44px; top: 45px; width: 44px; color: #ffffffad; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: .08em; pointer-events: none; }
 .menu-up { left: 44px; top: 0; }
 .menu-left { left: 0; top: 45px; }
 .menu-right { right: 0; top: 45px; }
 .menu-down { left: 44px; bottom: 0; }
-.menu-actions { position: absolute; top: 152px; right: var(--edge); display: flex; gap: 8px; pointer-events: none; }
+.menu-actions { position: absolute; left: var(--edge); bottom: calc(max(18px, 4vh) + 220px + 140px); display: flex; gap: 7px; pointer-events: none; }
 .menu-actions button { min-width: 60px; min-height: 42px; padding: 5px 9px; pointer-events: auto; background: #18301feb; }
-.menu-actions .back { min-width: 74px; background: #38201deb; font-size: 9px; }
+.menu-actions .back, .menu-actions .pause { min-width: 58px; background: #38201deb; font-size: 9px; }
 #buttons button.is-held, .menu-pad button:active, .menu-actions button:active { filter: brightness(1.5); box-shadow: 0 0 0 2px #fff8, 0 0 15px #fff5; }
 @media (orientation: portrait) {
   #welcome { top: 47%; }
@@ -67,11 +69,13 @@ button {
   .stick { width: 128px; }
   #buttons button { min-width: 54px; min-height: 52px; }
   .fire { width: 76px; height: 76px; min-width: 76px !important; min-height: 76px !important; }
-  .jump { right: calc(var(--edge) + 82px); }
+  .jump { left: calc(var(--edge) + 34px); bottom: calc(max(18px, 4vh) + 144px); }
   .use { right: calc(var(--edge) + 82px); bottom: calc(max(28px, 5vh) + 62px); }
+  .use-left { left: calc(var(--edge) + 132px); bottom: max(22px, 4vh); }
   .reload { right: calc(var(--edge) + 144px); bottom: calc(max(28px, 5vh) + 62px); }
   .grenade { right: calc(var(--edge) + 144px); }
+  .weapon { right: calc(var(--edge) + 144px); bottom: calc(max(28px, 5vh) + 122px); }
   .ads { bottom: calc(max(22px, 4vh) + 88px); }
-  .menu-pad { transform: scale(.84); transform-origin: top right; }
-  .menu-actions { top: 126px; }
+  .menu-pad { bottom: calc(max(18px, 4vh) + 216px); transform: scale(.76); transform-origin: bottom left; }
+  .menu-actions { left: var(--edge); bottom: calc(max(18px, 4vh) + 216px + 112px + 8px); }
 }

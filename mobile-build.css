@@ -47,9 +47,9 @@ button {
 .jump { left: calc(var(--edge) + 44px); bottom: calc(max(18px, 4vh) + 150px); }
 .run { left: calc(var(--edge) + 44px); bottom: calc(max(18px, 4vh) + 220px); min-width: 60px !important; min-height: 48px !important; border-radius: 16px !important; background: #185438e8; }
 .run.is-held { background: #2c8758f2; border-color: #b5ffd0; box-shadow: 0 0 16px #51d87888, inset 0 0 12px #51d87833; }
-.reload { right: calc(var(--edge) + 164px); bottom: calc(max(28px, 5vh) + 68px); }
-.grenade { right: calc(var(--edge) + 164px); bottom: max(28px, 5vh); font-size: 10px !important; }
-.weapon { right: calc(var(--edge) + 164px); bottom: calc(max(28px, 5vh) + 136px); }
+.reload { right: calc(var(--edge) + 104px); bottom: calc(max(28px, 5vh) + 68px); }
+.grenade { right: calc(var(--edge) + 104px); bottom: max(28px, 5vh); font-size: 10px !important; }
+.weapon { right: calc(var(--edge) + 104px); bottom: calc(max(28px, 5vh) + 136px); }
 .ads { right: var(--edge); bottom: calc(max(22px, 4vh) + 98px); min-width: 64px !important; min-height: 52px !important; border-radius: 16px !important; background: #394a78ed; }
 #menu-controls { position: absolute; z-index: 2; inset: 0; pointer-events: none; }
 .menu-pad { position: absolute; left: calc(var(--edge) + 142px); bottom: calc(max(18px, 4vh) + 98px); width: 132px; height: 132px; pointer-events: none; }
@@ -71,9 +71,9 @@ button {
   .fire { width: 76px; height: 76px; min-width: 76px !important; min-height: 76px !important; }
   .jump { left: calc(var(--edge) + 34px); bottom: calc(max(18px, 4vh) + 144px); }
   .run { left: calc(var(--edge) + 34px); bottom: calc(max(18px, 4vh) + 208px); }
-  .reload { right: calc(var(--edge) + 144px); bottom: calc(max(28px, 5vh) + 62px); }
-  .grenade { right: calc(var(--edge) + 144px); }
-  .weapon { right: calc(var(--edge) + 144px); bottom: calc(max(28px, 5vh) + 122px); }
+  .reload { right: calc(var(--edge) + 92px); bottom: calc(max(28px, 5vh) + 62px); }
+  .grenade { right: calc(var(--edge) + 92px); }
+  .weapon { right: calc(var(--edge) + 92px); bottom: calc(max(28px, 5vh) + 122px); }
   .ads { bottom: calc(max(22px, 4vh) + 88px); }
   .menu-pad { left: calc(var(--edge) + 132px); bottom: calc(max(18px, 4vh) + 98px); transform: scale(.76); transform-origin: bottom left; }
   .menu-actions { left: calc(var(--edge) + 132px); bottom: calc(max(18px, 4vh) + 98px + 112px + 8px); }

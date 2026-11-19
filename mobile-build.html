@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <title>NZ:P Mobile Controls Preview</title>
+  <link rel="stylesheet" href="mobile-build.css">
+</head>
+<body>
+  <main id="app">
+    <header id="bar"><a href="./">NZ:P Mobile</a><span id="status" role="status">Tap Start to load the official game.</span><button id="fullscreen" type="button">⛶</button></header>
+    <canvas id="canvas" aria-label="NZ:P game screen"></canvas>
+    <section id="welcome"><h1>NZ:P Mobile Controls Preview</h1><p>This preview loads the official game files directly from nzp.gay. Touch controls are routed to the game canvas in this page.</p><button id="begin" type="button">Start game</button></section>
+    <section id="touch-controls" aria-label="Touch controls" hidden>
+      <div id="stick" class="stick" aria-label="Move"><span></span><small>MOVE</small></div>
+      <div id="look" aria-label="Drag to look"></div>
+      <div id="buttons">
+        <button type="button" data-key="Space" class="jump">JUMP</button>
+        <button type="button" data-key="KeyE" class="use">USE</button>
+        <button type="button" data-key="KeyR" class="reload">RELOAD</button>
+        <button type="button" data-fire="true" class="fire">FIRE</button>
+      </div>
+    </section>
+  </main>
+  <script src="mobile-build.js"></script>
+</body>
+</html>

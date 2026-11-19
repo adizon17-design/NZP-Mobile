@@ -26,16 +26,16 @@ Last inspected: 2026-11-19. No actual iPhone 15 or Safari device was available i
 | Shell responsive layout, landscape intent, safe-area CSS | Implemented; not device-tested |
 | Official game boot and WASM loading | Confirmed in desktop browser; game reached active play |
 | Movement, menu select, and aim drag | Confirmed in desktop browser using the on-screen controls |
-| Fire, reload, and ADS | Mapped to engine mouse/keyboard events; not separately confirmed in gameplay |
+| Fire, reload, and ADS | Fire confirmed in desktop gameplay; ADS now toggles secondary mouse input; weapon-specific ADS still needs confirmation |
 | Gamepad button/stick routing and reconnect | FTE browser build polls the browser Gamepad API; physical controller not tested |
-| Audio, suspend/resume, resolution controls | Not integrated |
+| Audio unlock | Start and SOUND taps resume tracked WebAudio contexts; iPhone Safari remains untested |
 | PWA shell manifest/service worker | Implemented; not installed/tested on iPhone |
 | Cloudflare Pages configuration | Standard static deployment; no custom MIME overrides needed for shell |
 | Automated acceptance tests | Not added; engine bridge absent, so meaningful gameplay tests cannot pass |
 
 ## Work required to reach acceptance
 
-1. Confirm fire/reload/ADS behavior in active gameplay and tune the button spacing for different device sizes.
+1. Confirm weapon-specific ADS behavior and tune the button spacing for different device sizes.
 2. Test touch movement/look/fire/ADS, focus loss, orientation, audio, and Bluetooth gamepad on iPhone Safari; record device and iOS versions.
 3. If cross-origin loading is blocked in another browser, build a same-origin distribution only after confirming redistribution terms and required source/notices for GPL components.
 

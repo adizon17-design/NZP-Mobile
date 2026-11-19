@@ -166,12 +166,20 @@
     button.addEventListener('pointerdown', event => {
       event.preventDefault(); button.setPointerCapture(event.pointerId);
       unlockAudio();
+      if (button.dataset.adsToggle) {
+        const aiming = heldMouseButtons.has(2);
+        sendMouseButton(2, !aiming, event.clientX, event.clientY);
+        button.classList.toggle('is-held', !aiming);
+        button.setAttribute('aria-pressed', String(!aiming));
+        return;
+      }
       button.classList.add('is-held');
       if (button.dataset.fire) sendMouseButton(0, true, event.clientX, event.clientY);
       else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), true, event.clientX, event.clientY);
       else sendKey(button.dataset.key, true);
     });
     const release = event => {
+      if (button.dataset.adsToggle) return;
       button.classList.remove('is-held');
       if (button.dataset.fire) sendMouseButton(0, false, event.clientX, event.clientY);
       else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), false, event.clientX, event.clientY);
@@ -185,7 +193,10 @@
     for (const code of [...heldKeys]) sendKey(code, false);
     for (const button of [...heldMouseButtons]) sendMouseButton(button, false);
     for (const pointerId of [...fingers.keys()]) endFinger(pointerId, 0, 0);
-    document.querySelectorAll('#buttons .is-held').forEach(button => button.classList.remove('is-held'));
+    document.querySelectorAll('#buttons .is-held').forEach(button => {
+      button.classList.remove('is-held');
+      if (button.dataset.adsToggle) button.setAttribute('aria-pressed', 'false');
+    });
     if (stickPointer !== null) { stickPointer = null; stickNub.style.left = '50%'; stickNub.style.top = '50%'; }
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });

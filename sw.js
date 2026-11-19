@@ -1,5 +1,5 @@
-const CACHE = 'nzp-mobile-shell-v4';
-const SHELL = ['./', './index.html', './mobile.css', './mobile.js', './manifest.webmanifest', './mobile-build.html', './mobile-build.css?v=virtual-pad-layout2-20261119', './mobile-build.js?v=virtual-pad-layout2-20261119'];
+const CACHE = 'nzp-mobile-shell-v5';
+const SHELL = ['./', './index.html', './mobile.css', './mobile.js', './manifest.webmanifest', './mobile-build.html', './mobile-build.css?v=controller-fixes-20261119', './mobile-build.js?v=controller-fixes-20261119'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('nzp-mobile-shell-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {

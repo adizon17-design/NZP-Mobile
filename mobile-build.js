@@ -30,6 +30,14 @@
   }
 
   function unlockAudio() {
+    // Create the first context synchronously from a user gesture. This matters
+    // for iOS Safari and installed web apps where engine startup can be async.
+    if (!audioContexts.size) {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      if (Context) {
+        try { audioContexts.add(new Context()); } catch (_) {}
+      }
+    }
     for (const context of audioContexts) {
       if (context.state === 'suspended') context.resume().catch(() => {});
     }
@@ -57,8 +65,8 @@
   function sendKey(code, down) {
     if (down ? heldKeys.has(code) : !heldKeys.has(code)) return;
     down ? heldKeys.add(code) : heldKeys.delete(code);
-    const key = ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyR: 'r', Space: ' ', Enter: 'Enter', Escape: 'Escape', ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight' })[code] || '';
-    const keyCode = ({ KeyW: 87, KeyA: 65, KeyS: 83, KeyD: 68, KeyE: 69, KeyR: 82, Space: 32, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39 })[code] || 0;
+    const key = ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyR: 'r', KeyG: 'g', Space: ' ', Enter: 'Enter', Escape: 'Escape', ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight' })[code] || '';
+    const keyCode = ({ KeyW: 87, KeyA: 65, KeyS: 83, KeyD: 68, KeyE: 69, KeyR: 82, KeyG: 71, Space: 32, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39 })[code] || 0;
     canvas.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', {
       key, code, keyCode, which: keyCode,
       bubbles: true, cancelable: true
@@ -161,8 +169,7 @@
   look.addEventListener('pointerup', endLook);
   look.addEventListener('pointercancel', endLook);
 
-  document.querySelectorAll('#buttons button').forEach(button => {
-    let finger = null;
+  document.querySelectorAll('#buttons button, #menu-controls button').forEach(button => {
     button.addEventListener('pointerdown', event => {
       event.preventDefault(); button.setPointerCapture(event.pointerId);
       unlockAudio();
@@ -207,7 +214,7 @@
   });
   document.querySelector('#sound').addEventListener('click', () => {
     unlockAudio();
-    status.textContent = 'Audio resumed where supported';
+    status.textContent = 'Sound enabled — tap again if audio was paused';
   });
   document.querySelector('#begin').addEventListener('click', () => {
     unlockAudio();
@@ -217,4 +224,8 @@
     document.head.append(script);
     status.textContent = 'Loading official game engine…';
   }, { once: true });
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
 })();

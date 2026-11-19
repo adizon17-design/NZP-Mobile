@@ -4,8 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#090909">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>NZ:P Mobile Controls Preview</title>
-  <link rel="stylesheet" href="mobile-build.css?v=ads-toggle-567c10f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="mobile-build.css?v=menu-audio-grenade-20261119">
 </head>
 <body>
   <main id="app">
@@ -15,17 +18,29 @@
     <section id="touch-controls" aria-label="Touch controls" hidden>
       <div id="stick" class="stick" aria-label="Move"><span></span><small>MOVE</small></div>
       <div id="look" aria-label="Right half: drag to aim"><span>DRAG TO AIM</span></div>
+      <nav id="menu-controls" aria-label="Menu navigation">
+        <div class="menu-pad" role="group" aria-label="Menu directions">
+          <button type="button" data-key="ArrowUp" class="menu-up" aria-label="Menu up">▲</button>
+          <button type="button" data-key="ArrowLeft" class="menu-left" aria-label="Menu left">◀</button>
+          <span>MENU</span>
+          <button type="button" data-key="ArrowRight" class="menu-right" aria-label="Menu right">▶</button>
+          <button type="button" data-key="ArrowDown" class="menu-down" aria-label="Menu down">▼</button>
+        </div>
+        <div class="menu-actions" role="group" aria-label="Menu actions">
+          <button type="button" data-key="Escape" class="back">PAUSE<br>BACK</button>
+          <button type="button" data-key="Enter" class="select">SELECT</button>
+        </div>
+      </nav>
       <div id="buttons">
         <button type="button" data-key="Space" class="jump">JUMP</button>
-        <button type="button" data-key="Enter" class="select">SELECT</button>
-        <button type="button" data-key="Escape" class="back">BACK</button>
         <button type="button" data-key="KeyE" class="use">USE</button>
         <button type="button" data-key="KeyR" class="reload">RELOAD</button>
+        <button type="button" data-key="KeyG" class="grenade">GRENADE</button>
         <button type="button" data-ads-toggle="true" class="ads" aria-pressed="false">ADS</button>
         <button type="button" data-fire="true" class="fire">FIRE</button>
       </div>
     </section>
   </main>
-  <script src="mobile-build.js?v=ads-toggle-567c10f"></script>
+  <script src="mobile-build.js?v=menu-audio-grenade-20261119"></script>
 </body>
 </html>

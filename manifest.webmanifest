@@ -1,7 +1,7 @@
 {
   "name": "NZ:P Mobile",
   "short_name": "NZ:P",
-  "start_url": "./",
+  "start_url": "./mobile-build.html",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#090909",

@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#090909">
   <title>NZ:P Mobile Controls Preview</title>
-  <link rel="stylesheet" href="mobile-build.css?v=ads2">
+  <link rel="stylesheet" href="mobile-build.css?v=audio-aim-3">
 </head>
 <body>
   <main id="app">
-    <header id="bar"><a href="./">NZ:P Mobile</a><span id="status" role="status">Tap Start to load the official game.</span><button id="fullscreen" type="button">⛶</button></header>
+    <header id="bar"><a href="./">NZ:P Mobile</a><span id="status" role="status">Tap Start to load the official game.</span><button id="sound" type="button" aria-label="Enable game sound">SOUND</button><button id="fullscreen" type="button" aria-label="Fullscreen">⛶</button></header>
     <canvas id="canvas" aria-label="NZ:P game screen"></canvas>
     <section id="welcome"><h1>NZ:P Mobile Controls Preview</h1><p>This preview loads the official game files directly from nzp.gay. Touch controls are routed to the game canvas in this page.</p><button id="begin" type="button">Start game</button></section>
     <section id="touch-controls" aria-label="Touch controls" hidden>
       <div id="stick" class="stick" aria-label="Move"><span></span><small>MOVE</small></div>
-      <div id="look" aria-label="Drag to look"></div>
+      <div id="look" aria-label="Right half: drag to aim"><span>DRAG TO AIM</span></div>
       <div id="buttons">
         <button type="button" data-key="Space" class="jump">JUMP</button>
         <button type="button" data-key="Enter" class="select">SELECT</button>
@@ -26,6 +26,6 @@
       </div>
     </section>
   </main>
-  <script src="mobile-build.js?v=ads2"></script>
+  <script src="mobile-build.js?v=audio-aim-3"></script>
 </body>
 </html>

@@ -95,6 +95,8 @@
   const stick = document.querySelector('#stick');
   const stickNub = stick.querySelector('span');
   let stickPointer = null;
+  let sprintHeld = false;
+  const sprintButton = 10; // Standard gamepad left-stick click (L3).
   function updateStick(event) {
     const box = stick.getBoundingClientRect();
     const radius = box.width * .34;
@@ -115,6 +117,14 @@
     const gain = strength / (magnitude || 1);
     virtualPad.axes[0] = dx / radius * gain;
     virtualPad.axes[1] = dy / radius * gain;
+    // Sprint while the movement stick is pushed fully to its edge. FTE games
+    // commonly bind sprint to L3; this only holds L3 at near-full deflection.
+    const shouldSprint = magnitude >= .97;
+    if (shouldSprint !== sprintHeld) {
+      sprintHeld = shouldSprint;
+      setPadButton(sprintButton, sprintHeld, stick);
+      stick.classList.toggle('is-running', sprintHeld);
+    }
     virtualPad.timestamp = performance.now();
   }
   stick.addEventListener('pointerdown', event => {
@@ -128,6 +138,11 @@
     if (event.pointerId !== stickPointer) return;
     stickPointer = null;
     virtualPad.axes[0] = virtualPad.axes[1] = 0;
+    if (sprintHeld) {
+      sprintHeld = false;
+      setPadButton(sprintButton, false, stick);
+      stick.classList.remove('is-running');
+    }
     stickNub.style.left = stickNub.style.top = '50%';
     virtualPad.timestamp = performance.now();
   }
@@ -169,6 +184,11 @@
   look.addEventListener('pointerup', resetLook);
   look.addEventListener('pointercancel', resetLook);
 
+  // Catch touches on unused portions of the overlay too. Otherwise a missed
+  // tap can pass through to the engine canvas, where touchstart means FIRE.
+  controls.addEventListener('pointerdown', event => event.preventDefault(), { passive: false });
+  controls.addEventListener('touchstart', event => event.preventDefault(), { passive: false });
+
   document.querySelectorAll('#buttons button, #menu-controls button').forEach(button => {
     const index = Number(button.dataset.gamepadButton);
     button.addEventListener('pointerdown', event => {
@@ -201,6 +221,8 @@
     }
     virtualButtons.forEach(button => { button.pressed = button.touched = false; button.value = 0; });
     buttonSources.clear();
+    sprintHeld = false;
+    stick.classList.remove('is-running');
     document.querySelectorAll('#buttons .is-held').forEach(button => {
       button.classList.remove('is-held');
       if (button.dataset.adsToggle) button.setAttribute('aria-pressed', 'false');

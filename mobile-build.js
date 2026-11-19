@@ -2,13 +2,38 @@
 (() => {
   const upstream = 'https://nzp.gay/';
   const canvas = document.querySelector('#canvas');
+  canvas.tabIndex = 0;
   const status = document.querySelector('#status');
   const controls = document.querySelector('#touch-controls');
   const welcome = document.querySelector('#welcome');
   const heldKeys = new Set();
   const heldMouseButtons = new Set();
   const fingers = new Map();
+  const audioContexts = new Set();
   let nextFinger = 100;
+  let lastAimPoint = { x: 0, y: 0 };
+
+  // iOS can suspend WebAudio when the engine creates its audio context after
+  // the Start tap. Track engine contexts and resume them on each real touch.
+  for (const name of ['AudioContext', 'webkitAudioContext']) {
+    const NativeContext = window[name];
+    if (!NativeContext || NativeContext.__nzpTracked) continue;
+    const TrackedContext = new Proxy(NativeContext, {
+      construct(target, args) {
+        const context = Reflect.construct(target, args, target);
+        audioContexts.add(context);
+        return context;
+      }
+    });
+    Object.defineProperty(TrackedContext, '__nzpTracked', { value: true });
+    try { window[name] = TrackedContext; } catch (_) {}
+  }
+
+  function unlockAudio() {
+    for (const context of audioContexts) {
+      if (context.state === 'suspended') context.resume().catch(() => {});
+    }
+  }
 
   window.Module = {
     canvas,
@@ -39,11 +64,15 @@
       bubbles: true, cancelable: true
     }));
   }
-  function sendMouseButton(button, down) {
+  function sendMouseButton(button, down, x = lastAimPoint.x, y = lastAimPoint.y) {
     if (down ? heldMouseButtons.has(button) : !heldMouseButtons.has(button)) return;
+    if (down) canvas.focus({ preventScroll: true });
     down ? heldMouseButtons.add(button) : heldMouseButtons.delete(button);
+    const buttonBit = value => value === 2 ? 2 : value === 1 ? 4 : 1;
+    const bits = [...heldMouseButtons].reduce((mask, value) => mask | buttonBit(value), 0);
     canvas.dispatchEvent(new MouseEvent(down ? 'mousedown' : 'mouseup', {
-      button, bubbles: true, cancelable: true, view: window
+      button, buttons: bits, clientX: x, clientY: y,
+      screenX: x, screenY: y, bubbles: true, cancelable: true, view: window
     }));
   }
 
@@ -113,12 +142,18 @@
 
   const look = document.querySelector('#look');
   const lookPointers = new Set();
+  document.addEventListener('pointerdown', unlockAudio, { capture: true, passive: true });
   look.addEventListener('pointerdown', event => {
     event.preventDefault(); look.setPointerCapture(event.pointerId); lookPointers.add(event.pointerId);
+    lastAimPoint = { x: event.clientX, y: event.clientY };
     try { startFinger(event.pointerId, event.clientX, event.clientY); }
     catch (error) { status.textContent = error.message; }
   });
-  look.addEventListener('pointermove', event => { if (lookPointers.has(event.pointerId)) moveFinger(event.pointerId, event.clientX, event.clientY); });
+  look.addEventListener('pointermove', event => {
+    if (!lookPointers.has(event.pointerId)) return;
+    lastAimPoint = { x: event.clientX, y: event.clientY };
+    moveFinger(event.pointerId, event.clientX, event.clientY);
+  });
   function endLook(event) {
     if (!lookPointers.delete(event.pointerId)) return;
     endFinger(event.pointerId, event.clientX, event.clientY);
@@ -130,13 +165,16 @@
     let finger = null;
     button.addEventListener('pointerdown', event => {
       event.preventDefault(); button.setPointerCapture(event.pointerId);
-      if (button.dataset.fire) sendMouseButton(0, true);
-      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), true);
+      unlockAudio();
+      button.classList.add('is-held');
+      if (button.dataset.fire) sendMouseButton(0, true, event.clientX, event.clientY);
+      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), true, event.clientX, event.clientY);
       else sendKey(button.dataset.key, true);
     });
     const release = event => {
-      if (button.dataset.fire) sendMouseButton(0, false);
-      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), false);
+      button.classList.remove('is-held');
+      if (button.dataset.fire) sendMouseButton(0, false, event.clientX, event.clientY);
+      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), false, event.clientX, event.clientY);
       else if (button.dataset.key) sendKey(button.dataset.key, false);
     };
     button.addEventListener('pointerup', release);
@@ -147,6 +185,7 @@
     for (const code of [...heldKeys]) sendKey(code, false);
     for (const button of [...heldMouseButtons]) sendMouseButton(button, false);
     for (const pointerId of [...fingers.keys()]) endFinger(pointerId, 0, 0);
+    document.querySelectorAll('#buttons .is-held').forEach(button => button.classList.remove('is-held'));
     if (stickPointer !== null) { stickPointer = null; stickNub.style.left = '50%'; stickNub.style.top = '50%'; }
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
@@ -155,7 +194,12 @@
   document.querySelector('#fullscreen').addEventListener('click', async () => {
     try { await document.documentElement.requestFullscreen?.(); } catch (_) { status.textContent = 'Fullscreen is unavailable in this browser.'; }
   });
+  document.querySelector('#sound').addEventListener('click', () => {
+    unlockAudio();
+    status.textContent = 'Audio resumed where supported';
+  });
   document.querySelector('#begin').addEventListener('click', () => {
+    unlockAudio();
     const script = document.createElement('script');
     script.src = upstream + 'ftewebgl.js';
     script.onerror = () => { status.textContent = 'Could not load the official engine. Check nzp.gay connectivity and cross-site access.'; };

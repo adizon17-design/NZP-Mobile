@@ -6,6 +6,7 @@
   const controls = document.querySelector('#touch-controls');
   const welcome = document.querySelector('#welcome');
   const heldKeys = new Set();
+  const heldMouseButtons = new Set();
   const fingers = new Map();
   let nextFinger = 100;
 
@@ -38,9 +39,11 @@
       bubbles: true, cancelable: true
     }));
   }
-  function sendFire(down) {
+  function sendMouseButton(button, down) {
+    if (down ? heldMouseButtons.has(button) : !heldMouseButtons.has(button)) return;
+    down ? heldMouseButtons.add(button) : heldMouseButtons.delete(button);
     canvas.dispatchEvent(new MouseEvent(down ? 'mousedown' : 'mouseup', {
-      button: 0, bubbles: true, cancelable: true, view: window
+      button, bubbles: true, cancelable: true, view: window
     }));
   }
 
@@ -127,11 +130,13 @@
     let finger = null;
     button.addEventListener('pointerdown', event => {
       event.preventDefault(); button.setPointerCapture(event.pointerId);
-      if (button.dataset.fire) sendFire(true);
+      if (button.dataset.fire) sendMouseButton(0, true);
+      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), true);
       else sendKey(button.dataset.key, true);
     });
     const release = event => {
-      if (button.dataset.fire) sendFire(false);
+      if (button.dataset.fire) sendMouseButton(0, false);
+      else if (button.dataset.mouse) sendMouseButton(Number(button.dataset.mouse), false);
       else if (button.dataset.key) sendKey(button.dataset.key, false);
     };
     button.addEventListener('pointerup', release);
@@ -140,6 +145,7 @@
 
   function releaseAll() {
     for (const code of [...heldKeys]) sendKey(code, false);
+    for (const button of [...heldMouseButtons]) sendMouseButton(button, false);
     for (const pointerId of [...fingers.keys()]) endFinger(pointerId, 0, 0);
     if (stickPointer !== null) { stickPointer = null; stickNub.style.left = '50%'; stickNub.style.top = '50%'; }
   }

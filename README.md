@@ -24,8 +24,8 @@ Last inspected: 2026-11-19. No actual iPhone 15 or Safari device was available i
 | Requirement | Status |
 |---|---|
 | Shell responsive layout, landscape intent, safe-area CSS | Implemented; not device-tested |
-| Official game boot and WASM loading | Experimental launcher added; cross-origin loading not verified |
-| Touch movement/look/fire/reload | Keyboard/mouse/touch DOM event bridge added; gameplay not verified |
+| Official game boot and WASM loading | Confirmed in desktop browser; the official main menu renders |
+| Touch movement/look/fire/reload/ADS | Same-page event bridge and controls added; gameplay input not yet verified |
 | Gamepad button/stick routing and reconnect | FTE browser build polls the browser Gamepad API; physical controller not tested |
 | Audio, suspend/resume, resolution controls | Not integrated |
 | PWA shell manifest/service worker | Implemented; not installed/tested on iPhone |
@@ -34,11 +34,10 @@ Last inspected: 2026-11-19. No actual iPhone 15 or Safari device was available i
 
 ## Work required to reach acceptance
 
-1. Confirm the cross-origin file requests succeed from GitHub Pages and the WASM file loads.
-2. Verify the default game bindings for use/reload/jump and tune the on-screen button mapping.
-3. Test touch movement/look/fire, focus loss, orientation, audio, and Bluetooth gamepad on iPhone Safari; record device and iOS versions.
-4. If cross-origin loading is blocked, build a same-origin distribution with confirmed redistribution terms and the required source/notices for GPL components.
+1. Verify movement, look, fire, ADS, and the game menu keys in actual gameplay.
+2. Test touch movement/look/fire/ADS, focus loss, orientation, audio, and Bluetooth gamepad on iPhone Safari; record device and iOS versions.
+3. If cross-origin loading is blocked in another browser, build a same-origin distribution only after confirming redistribution terms and required source/notices for GPL components.
 
 ## Hosting status
 
-The public GitHub repository is [`adizon17-design/NZP-Mobile`](https://github.com/adizon17-design/NZP-Mobile). GitHub Pages previously deployed the shell; this experimental launcher change has not yet been published or tested on iPhone. Cloudflare Pages is not configured because no Cloudflare account is connected.
+The public GitHub repository is [`adizon17-design/NZP-Mobile`](https://github.com/adizon17-design/NZP-Mobile). GitHub Pages now includes the experimental launcher. Desktop browser startup reached the official main menu. iPhone Safari and gameplay controls remain unverified. Cloudflare Pages is not configured because no Cloudflare account is connected.

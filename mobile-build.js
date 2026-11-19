@@ -31,10 +31,10 @@
   function sendKey(code, down) {
     if (down ? heldKeys.has(code) : !heldKeys.has(code)) return;
     down ? heldKeys.add(code) : heldKeys.delete(code);
-    const key = ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyR: 'r', Space: ' ' })[code] || '';
+    const key = ({ KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd', KeyE: 'e', KeyR: 'r', Space: ' ', Enter: 'Enter', Escape: 'Escape', ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight' })[code] || '';
+    const keyCode = ({ KeyW: 87, KeyA: 65, KeyS: 83, KeyD: 68, KeyE: 69, KeyR: 82, Space: 32, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39 })[code] || 0;
     canvas.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', {
-      key, code, keyCode: code === 'Space' ? 32 : code.charCodeAt(code.length - 1),
-      which: code === 'Space' ? 32 : code.charCodeAt(code.length - 1),
+      key, code, keyCode, which: keyCode,
       bubbles: true, cancelable: true
     }));
   }
@@ -92,6 +92,8 @@
     const dead = box.width * .17;
     sendKey('KeyW', ny < -dead); sendKey('KeyS', ny > dead);
     sendKey('KeyA', nx < -dead); sendKey('KeyD', nx > dead);
+    sendKey('ArrowUp', ny < -dead); sendKey('ArrowDown', ny > dead);
+    sendKey('ArrowLeft', nx < -dead); sendKey('ArrowRight', nx > dead);
   }
   stick.addEventListener('pointerdown', event => {
     event.preventDefault(); stickPointer = event.pointerId; stick.setPointerCapture(stickPointer); updateStick(event);
@@ -100,7 +102,7 @@
   function resetStick(event) {
     if (event.pointerId !== stickPointer) return;
     stickPointer = null;
-    for (const key of ['KeyW', 'KeyA', 'KeyS', 'KeyD']) sendKey(key, false);
+    for (const key of ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) sendKey(key, false);
     stickNub.style.left = '50%'; stickNub.style.top = '50%';
   }
   stick.addEventListener('pointerup', resetStick);

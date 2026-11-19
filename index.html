@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>NZ:P Mobile</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+  <main id="shell">
+    <header id="topbar"><strong>NZ:P Mobile</strong><button id="start">Open official NZ:P</button><button id="fullscreen" aria-label="Fullscreen">⛶</button></header>
+    <section id="notice" role="status"><b>Mobile shell preview</b><p>Touch input needs an engine-side bridge. The official game is loaded in a separate frame, so this shell cannot send controls into it.</p><p>Use the game’s built-in keyboard/controller support in a compatible desktop browser for now.</p></section>
+    <iframe id="game" title="Official NZ:P WebGL game" allow="autoplay; fullscreen; gamepad" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <section id="controls" aria-label="Touch controls" hidden>
+      <div id="stick" class="pad"><span></span></div>
+      <div id="look" aria-label="Drag to look"></div>
+      <div class="actions"><button data-key="Space">JUMP</button><button data-key="KeyE">USE</button><button data-key="KeyR">RELOAD</button><button data-button="0">FIRE</button></div>
+    </section>
+  </main>
+  <script src="mobile.js"></script>
+</body>
+</html>

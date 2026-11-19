@@ -95,8 +95,9 @@
   const stick = document.querySelector('#stick');
   const stickNub = stick.querySelector('span');
   let stickPointer = null;
-  let sprintHeld = false;
-  const sprintButton = 10; // Standard gamepad left-stick click (L3).
+  const runButton = document.querySelector('.run');
+  const runButtonIndex = Number(runButton.dataset.gamepadButton);
+  let runToggled = false;
   function updateStick(event) {
     const box = stick.getBoundingClientRect();
     const radius = box.width * .34;
@@ -117,14 +118,6 @@
     const gain = strength / (magnitude || 1);
     virtualPad.axes[0] = dx / radius * gain;
     virtualPad.axes[1] = dy / radius * gain;
-    // Sprint while the movement stick is pushed fully to its edge. FTE games
-    // commonly bind sprint to L3; this only holds L3 at near-full deflection.
-    const shouldSprint = magnitude >= .97;
-    if (shouldSprint !== sprintHeld) {
-      sprintHeld = shouldSprint;
-      setPadButton(sprintButton, sprintHeld, stick);
-      stick.classList.toggle('is-running', sprintHeld);
-    }
     virtualPad.timestamp = performance.now();
   }
   stick.addEventListener('pointerdown', event => {
@@ -138,11 +131,6 @@
     if (event.pointerId !== stickPointer) return;
     stickPointer = null;
     virtualPad.axes[0] = virtualPad.axes[1] = 0;
-    if (sprintHeld) {
-      sprintHeld = false;
-      setPadButton(sprintButton, false, stick);
-      stick.classList.remove('is-running');
-    }
     stickNub.style.left = stickNub.style.top = '50%';
     virtualPad.timestamp = performance.now();
   }
@@ -155,22 +143,40 @@
   let lookPointer = null;
   let lastLook = null;
   let lookResetTimer = 0;
+  let lookFrame = 0;
+  let lookTargetX = 0;
+  let lookTargetY = 0;
+  let lookFrameTime = 0;
+  function smoothLook(time) {
+    if (lookPointer === null) { lookFrame = 0; return; }
+    const dt = lookFrameTime ? Math.min(50, time - lookFrameTime) : 16;
+    lookFrameTime = time;
+    const blend = 1 - Math.exp(-dt / 24);
+    virtualPad.axes[2] += (lookTargetX - virtualPad.axes[2]) * blend;
+    virtualPad.axes[3] += (lookTargetY - virtualPad.axes[3]) * blend;
+    virtualPad.timestamp = time;
+    lookFrame = requestAnimationFrame(smoothLook);
+  }
   function updateLook(event) {
     if (!lastLook) { lastLook = { x: event.clientX, y: event.clientY }; return; }
     const dx = event.clientX - lastLook.x;
     const dy = event.clientY - lastLook.y;
     lastLook = { x: event.clientX, y: event.clientY };
-    virtualPad.axes[2] = Math.max(-1, Math.min(1, dx / 18));
-    virtualPad.axes[3] = Math.max(-1, Math.min(1, dy / 18));
+    // A stronger, smoothed virtual right stick makes short swipes register
+    // quickly without sending TouchEvents to the engine's fire handler.
+    lookTargetX = Math.max(-1, Math.min(1, dx / 10));
+    lookTargetY = Math.max(-1, Math.min(1, dy / 10));
     virtualPad.timestamp = performance.now();
     clearTimeout(lookResetTimer);
-    lookResetTimer = setTimeout(() => { virtualPad.axes[2] = virtualPad.axes[3] = 0; }, 55);
+    lookResetTimer = setTimeout(() => { lookTargetX = lookTargetY = 0; }, 75);
   }
   look.addEventListener('pointerdown', event => {
     event.preventDefault(); unlockAudio();
     lookPointer = event.pointerId;
     look.setPointerCapture(lookPointer);
     lastLook = { x: event.clientX, y: event.clientY };
+    lookFrameTime = 0;
+    if (!lookFrame) lookFrame = requestAnimationFrame(smoothLook);
   });
   look.addEventListener('pointermove', event => { if (event.pointerId === lookPointer) updateLook(event); });
   function resetLook(event) {
@@ -178,6 +184,9 @@
     lookPointer = null;
     lastLook = null;
     clearTimeout(lookResetTimer);
+    if (lookFrame) cancelAnimationFrame(lookFrame);
+    lookFrame = 0;
+    lookTargetX = lookTargetY = 0;
     virtualPad.axes[2] = virtualPad.axes[3] = 0;
     virtualPad.timestamp = performance.now();
   }
@@ -194,6 +203,13 @@
     button.addEventListener('pointerdown', event => {
       event.preventDefault(); unlockAudio();
       button.setPointerCapture(event.pointerId);
+      if (button.dataset.runToggle) {
+        runToggled = !runToggled;
+        setPadButton(runButtonIndex, runToggled, runButton);
+        runButton.classList.toggle('is-held', runToggled);
+        runButton.setAttribute('aria-pressed', String(runToggled));
+        return;
+      }
       if (button.dataset.adsToggle) {
         const aiming = virtualButtons[index].pressed;
         setPadButton(index, !aiming, button);
@@ -205,7 +221,7 @@
       setPadButton(index, true, button);
     });
     const release = event => {
-      if (button.dataset.adsToggle) return;
+      if (button.dataset.adsToggle || button.dataset.runToggle) return;
       button.classList.remove('is-held');
       setPadButton(index, false, button);
     };
@@ -221,13 +237,19 @@
     }
     virtualButtons.forEach(button => { button.pressed = button.touched = false; button.value = 0; });
     buttonSources.clear();
-    sprintHeld = false;
-    stick.classList.remove('is-running');
+    runToggled = false;
+    runButton.classList.remove('is-held');
+    runButton.setAttribute('aria-pressed', 'false');
     document.querySelectorAll('#buttons .is-held').forEach(button => {
       button.classList.remove('is-held');
       if (button.dataset.adsToggle) button.setAttribute('aria-pressed', 'false');
     });
     virtualPad.axes.fill(0);
+    clearTimeout(lookResetTimer);
+    if (lookFrame) cancelAnimationFrame(lookFrame);
+    lookFrame = 0;
+    lookTargetX = lookTargetY = 0;
+    lastLook = null;
     stickPointer = lookPointer = null;
     stickNub.style.left = stickNub.style.top = '50%';
   }

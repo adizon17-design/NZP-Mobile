@@ -1,49 +1,32 @@
-# NZ:P Mobile — compatibility shell (incomplete)
+# NZ:P Mobile — shell preview (not yet playable)
 
-This is an independently hosted PWA shell for investigating iPhone compatibility. It **does not yet make NZ:P playable on touch or gamepad**. The official page is opened in a cross-origin frame, which cannot be controlled by this shell. No upstream code, WASM, binaries, or game assets are included.
+This is an independent PWA shell and preview deployment. Touch and Bluetooth controller input are not connected to the game, and this build is not verified on iPhone 15. No upstream engine, WASM, game binary, or asset is included.
 
-## Upstream inspection
+## Official source review
 
-- The official web host is [`nzp-team/nzp-team.github.io`](https://github.com/nzp-team/nzp-team.github.io). Its `index.html` creates a `Module.files` list for `default.fmf`, `nzp/game.pk3`, and `nzp/progs.pk3`, then injects `ftewebgl.js`; it uses `ftewebgl.wasm` and the `#canvas` element. It starts the engine only after `begin()`.
-- [`vril-engine`](https://github.com/nzp-team/vril-engine) is GPL-2.0. That does not establish a license for every packaged binary or asset.
-- [`nzportable`](https://github.com/nzp-team/nzportable) source and [`assets`](https://github.com/nzp-team/assets) were reviewed via their official GitHub project pages. The assets repository declares CC BY-SA 4.0 (attribution and share-alike apply). The web host itself has no license declaration surfaced in the inspected root files. No assets are copied here.
-- The hosted launcher does not publish a supported JS input API. The exact bindings and browser event handling still need inspection against a pinned upstream source revision and the actual `ftewebgl.js` build. Synthetic keyboard/mouse events are not a verified input route; mouse-look often depends on pointer lock, which iOS Safari does not provide as desktop browsers do.
+- The official WebGL launcher is in [nzp-team/nzp-team.github.io](https://github.com/nzp-team/nzp-team.github.io). It loads `ftewebgl.js` and `ftewebgl.wasm`, plus `default.fmf`, `nzp/game.pk3`, and `nzp/progs.pk3`, then starts after a user click.
+- The reviewed [Vril engine input layer](https://github.com/nzp-team/vril-engine/blob/main/source/input.c) supports keyboard/mouse and gamepad. Its SDL backend maps gamepad buttons, sticks, and connect/disconnect events. That does not establish an input bridge for the separate FTE WebGL build used by the official page. No supported JavaScript input API was found in the launcher.
+- Vril is GPL-2.0; the [assets repository](https://github.com/nzp-team/assets/blob/main/LICENSE.md) declares CC BY-SA 4.0. The web host’s redistribution terms for all packaged files have not been established. Nothing from those repositories is copied here.
 
-## Run locally
+## Try the preview
 
-Serve this directory over HTTPS (or localhost), then open `index.html`. `Open official NZ:P` navigates the embedded frame to `https://nzp.gay/`. Fullscreen is feature-detected; iOS Safari may ignore it. The service worker caches only this small shell and intentionally leaves all cross-origin game content untouched.
+Open <https://adizon17-design.github.io/NZP-Mobile/>. It demonstrates the shell only. The “Open official NZ:P” button opens the upstream page; the shell cannot send input into that cross-origin page. iOS Safari fullscreen behavior, game boot, audio, and gameplay are unverified.
 
-## Deployment
+## Hosting and setup
 
-Use Cloudflare Pages with this directory as the project root and no build command. Keep the deployment on HTTPS. Do not add game binaries or assets until the rights and upstream notices for each item have been confirmed. For a playable build, host the official launcher and authorized game files on the same origin, then add a maintained bridge inside the launcher/engine and verify the inputs below. Upstream changes should be pinned to a commit or release and tracked separately.
+The public repository is [adizon17-design/NZP-Mobile](https://github.com/adizon17-design/NZP-Mobile). GitHub Pages is enabled from the `main` branch root and the initial deployment succeeded. `wrangler.toml` is included for future Cloudflare Pages deployment; Cloudflare is not configured. The service worker caches only the shell. Do not add game files until redistribution rights and notices are confirmed.
 
-## Status and test report
+For a playable version, the game and launcher must be hosted same-origin with a verified bridge that routes touch/gamepad input to engine APIs and releases held inputs on interruption.
 
-Last inspected: 2026-11-19. No actual iPhone 15 or Safari device was available in this workspace. No claim of iOS compatibility is made.
+## Test report
 
-| Requirement | Status |
-|---|---|
-| Shell responsive layout, landscape intent, safe-area CSS | Implemented; not device-tested |
-| Official game boot and WASM loading | Not verified from this independent shell; frame points to upstream |
-| Touch movement/look/fire/reload | Not integrated; controls disabled |
-| Gamepad button/stick routing and reconnect | Detection events only; routing not integrated |
-| Audio, suspend/resume, resolution controls | Not integrated |
-| PWA shell manifest/service worker | Implemented; not installed/tested on iPhone |
-| Cloudflare Pages configuration | Standard static deployment; no custom MIME overrides needed for shell |
-| Automated acceptance tests | Not added; engine bridge absent, so meaningful gameplay tests cannot pass |
+- Verified: JS syntax checks for `mobile.js` and `sw.js`; GitHub Pages build/deployment succeeded; the published page returns the NZ:P Mobile shell.
+- Not verified: game/WASM/assets load, touch controls, gamepad routing, audio, suspend/resume, or iPhone 15 Safari behavior. No iPhone device was available; no compatibility claim is made.
 
-## Work required to reach acceptance
+## Remaining work
 
-1. Pin and inspect the official WebGL source/build, including Vril/FTE browser input callbacks and actual default bindings.
-2. Confirm redistribution terms for the web launcher and each binary/package; keep all notices and provide source obligations for GPL components.
-3. Integrate a same-origin touch/gamepad adapter into the launch page or engine so actions call verified engine input APIs and release on interruption.
-4. Test startup, gameplay, orientation, audio, background/resume, and gamepad on real iPhone 15 Safari; record device and iOS versions.
-5. Set up the separate GitHub repository and Pages project under an authorized account. This workspace has no remote repository or deployment credentials.
-
-### Automated Cloudflare Pages deployment
-
-A GitHub Actions workflow is included at `.github/workflows/cloudflare-pages.yml`. After importing this independent project into a GitHub repository named `NZP-Mobile`, create a Cloudflare Pages project named `nzp-mobile-shell`, then add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Push to `main` or run the workflow manually. The workflow deploys only this shell; it does not mirror or bundle the game.
-
-## Current handoff blocker
-
-This workspace has no GitHub or Cloudflare account connection, no `gh` CLI, and cannot reach GitHub from the shell. The project is initialized as a local Git repository with its first changes staged, but no commit, remote repository, credentials, or public deployment have been created. Once GitHub and Cloudflare are connected to the environment, the repository can be pushed and the included workflow can publish the shell. A deployment would still be only a shell preview until an authorized same-origin game build and tested engine input bridge are available.
+1. Pin and inspect the exact official FTE WebGL build and its input event path.
+2. Confirm redistribution terms for the web build and packaged files.
+3. Implement the input bridge inside the same-origin launcher/engine.
+4. Test initialization, gameplay, multitouch, controller reconnect, orientation, audio, and resume on a real iPhone 15; document iOS version and results.
+5. Set up Cloudflare Pages if desired, then point the domain after the functional integration is complete.
